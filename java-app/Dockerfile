@@ -7,8 +7,8 @@ RUN javac Main.java
 # ---- Runtime stage ----
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S javagroup && adduser -S javauser -G javagroup
 COPY --from=builder /app/Main.class .
-USER appuser
+USER javauser
 EXPOSE 8080
 CMD ["java", "Main"]
