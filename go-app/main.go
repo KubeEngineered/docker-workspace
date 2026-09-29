@@ -35,11 +35,11 @@ func main() {
 	// Main root endpoint returning structured JSON
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		
+
 		status := AppStatus{
 			Version:     appVersion,
 			Environment: getEnvOrDefault("APP_ENV", "local-dev"),
-			Status:      "operational",
+			Status:      "running",
 			Uptime:      time.Since(startTime).Round(time.Second).String(),
 			Timestamp:   time.Now().UTC(),
 		}
@@ -54,9 +54,9 @@ func main() {
 		w.Write([]byte(`{"status":"UP","healthy":true}`))
 	})
 
-	log.Printf("Server listening on port :%s...", port)
+	log.Printf("Linux Server listening on port :%s...", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalf("Server failed to start: %v\n", err)
+		log.Fatalf("Server failed to start and crashed: %v\n", err)
 	}
 }
 
