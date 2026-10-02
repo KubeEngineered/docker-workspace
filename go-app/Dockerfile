@@ -1,41 +1,45 @@
-# --- Stage 1: Build Stage ---
+# ================================
+# Stage 1: Build Stage
+# ================================
 FROM golang:1.22-alpine AS builder
 
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy go module files first to leverage Docker layer caching
-COPY go.mod go.sum* ./
+# Copy dependency files first to leverage Docker layer caching
+COPY go.mod ./
 RUN go mod download
 
 # Copy the rest of the application source code
 COPY . .
 
-# Build a static Go binary targeting Linux
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main .
+# Build the Go application as a static binary
+# CGO_ENABLED=0 disables C dependencies to ensure portability
+# GOOS=linux targets Linux OS
+# -ldflags="-w -s" strips debug information to minimize binary size
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o main .
 
-# --- Stage 2: Minimal Runtime Stage ---
-FROM alpine:3.19
+# ================================
+# Stage 2: Minimal Runtime Stage
+# ================================
+FROM alpine:3.19 AS runner
 
-# Install ca-certificates in case your Go app makes outbound HTTPS calls
-RUN apk --no-cache add ca-certificates
+# Create a non-root user and group for security best practices
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-WORKDIR /root/
+WORKDIR /app
 
 # Copy only the compiled binary from the builder stage
 COPY --from=builder /app/main .
 
-# Set default environment variables (can be overridden at runtime)
-ENV PORT=8080 \
-    APP_VERSION=v3.0.0 \
-    APP_ENV=production
+# Change ownership of the binary to non-root user
+RUN chown appuser:appgroup /app/main
+
+# Switch to non-root user
+USER appuser
 
 # Expose the application port
 EXPOSE 8080
-
-# Configure a Docker container health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 # Run the binary
 CMD ["./main"]
