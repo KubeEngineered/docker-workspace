@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# For Debian/Ubuntu-based images
+RUN apk update && apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy dependency manifests first
