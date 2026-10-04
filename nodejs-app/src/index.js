@@ -17,19 +17,19 @@ app.get('/', async (req, res) => {
   try {
     const dbResult = await pool.query('SELECT NOW()');
     res.json({
-      status: 'healthy',
-      message: 'Node.js connected to PostgreSQL successfully!',
+      status: 'running',
+      message: 'Node.js connected to PostgreSQL databasesuccessfully!',
       dbTime: dbResult.rows[0].now
     });
   } catch (err) {
     res.status(500).json({
       status: 'error',
-      message: 'Failed to connect to PostgreSQL',
+      message: 'Failed to establish connection to PostgreSQL database',
       error: err.message
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`App Server listening on port ${PORT}`);
 });

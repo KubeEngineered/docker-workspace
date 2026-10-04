@@ -1,45 +1,17 @@
-# ==========================================
-# Stage 1: Build & Dependencies
-# ==========================================
-FROM node:20-alpine AS builder
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy dependency manifests first to leverage Docker layer caching
+# Copy dependency manifests first
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies needed for build/testing)
-RUN npm ci
+# Cache layer: This step re-runs ONLY if package.json or package-lock.json changes
+RUN npm ci --only=production
 
-# Copy application source code
+# Copy the rest of the application code
+# Cache layer: Modifying files in src/ will break cache starting FROM THIS POINT onwards
 COPY . .
 
-# Optional: Run build step if using TypeScript or bundlers (e.g., npm run build)
-# RUN npm run build
-
-# Prune devDependencies to keep the production node_modules minimal
-RUN npm prune --production
-
-# ==========================================
-# Stage 2: Minimal Production Runtime
-# ==========================================
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-# Set production environment
-ENV NODE_ENV=production
-
-# Run as non-root user for security (built into Alpine node image)
-USER node
-
-# Copy dependencies and built assets from builder stage
-COPY --chown=node:node --from=builder /app/package*.json ./
-COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/src ./src
-
-# Expose app port
 EXPOSE 3000
 
-# Use node directly (avoids npm consuming signals like SIGTERM)
 CMD ["node", "src/index.js"]
