@@ -10,11 +10,11 @@ COPY requirements.txt .
 # packages into the final stage (keeps build tools out of the final image)
 RUN pip install --no-cache-dir -r requirements.txt
 
-
+# Copy source code
 COPY app.py .
 
 EXPOSE 5000
 
-ENV APP_ENV="Production-Azure"
+ENV APP_VERSION=v1.0.0
 
 CMD ["python", "app.py"]
