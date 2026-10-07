@@ -1,3 +1,3 @@
-module go-app
+module goapp
 
 go 1.22
